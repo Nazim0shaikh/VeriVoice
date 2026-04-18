@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // COMPLAINTS collection
+    match /COMPLAINTS/{complaintId} {
+      // Anyone can READ any document (public transparency)
+      allow read: if true;
+      
+      // Anyone can CREATE a document IF:
+      allow create: if 
+        // All required fields present
+        request.resource.data.keys().hasAll(['id', 'text', 'hash', 'category', 'severity', 'status', 'timestamp', 'location']) &&
+        // Only pending on creation
+        request.resource.data.status == 'pending' &&
+        // Hash field is a non-empty string
+        request.resource.data.hash is string && request.resource.data.hash.size() > 0 &&
+        // Text field is a non-empty string, max 2000 chars
+        request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 2000;
+        
+      // Officials (users with email verified) can UPDATE restricted fields
+      allow update: if 
+        request.auth != null && request.auth.token.email_verified == true &&
+        // NOBODY can UPDATE text, hash, id, or timestamp
+        !request.resource.data.diff(resource.data).affectedAny(['text', 'hash', 'id', 'timestamp']) &&
+        // Officials can only update status, officialResponse, resolvedAt
+        request.resource.data.diff(resource.data).affectedAny(['status', 'officialResponse', 'resolvedAt']);
+        
+      // NOBODY can DELETE any complaint document — ever
+      allow delete: if false;
+    }
+
+    // AUDIT_LOGS collection
+    match /AUDIT_LOGS/{docId} {
+      // Admins only can read (using Firebase IAM/Admin SDK)
+      allow read: if false;
+      // Cloud Functions only can write (no client writes)
+      allow write: if false;
+    }
+
+    // OFFICIALS collection
+    match /OFFICIALS/{userId} {
+      // Only the official themselves can read their own document
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // No client writes (managed via Cloud Functions/Admin DDK)
+      allow write: if false;
+    }
+  }
+}

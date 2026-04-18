@@ -1,0 +1,100 @@
+'use client';
+
+import Link from 'next/link';
+import { Shield, Volume2, Database, TrendingUp, ArrowRight } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { useLanguage } from '@/components/LanguageContext';
+
+const AnimatedIndianMap = dynamic(() => import('@/components/AnimatedIndianMap'), { ssr: false });
+
+export default function LandingPage() {
+  const { t } = useLanguage();
+
+  return (
+    <div className="flex flex-col">
+      {/* Hero Section */}
+      <section className="bg-swiss-white border-b-8 border-swiss-black min-h-[90vh] flex items-center relative overflow-hidden">
+        {/* Animated Background Map */}
+        <AnimatedIndianMap />
+        
+        {/* Background Dot Pattern (Overlay above Map) */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none z-0" style={{ backgroundImage: "radial-gradient(#000 2px, transparent 2px)", backgroundSize: "32px 32px" }}></div>
+        
+        {/* Foreground Content */}
+        <div className="max-w-[1440px] w-full px-6 mx-auto relative z-10 flex flex-col md:flex-row gap-12 items-center pointer-events-none">
+          <div className="flex-1 max-w-3xl pointer-events-auto">
+            <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter leading-none mb-8 text-swiss-black">
+              {t('heroVoice')} <br />
+              <span className="text-swiss-accent shadow-[8px_8px_0px_#050505] bg-swiss-black px-4 inline-block transform -rotate-2">{t('heroImmutable')}</span>
+            </h1>
+            <p className="text-2xl md:text-3xl font-medium tracking-tight mb-12 border-l-8 border-swiss-black pl-6 text-swiss-black">
+              {t('heroDesc')}
+            </p>
+            <div className="flex flex-wrap gap-6">
+              <Link href="/file" className="btn-swiss-primary text-xl px-12 py-6 flex items-center justify-center gap-4 group">
+                {t('btnFile')} 
+                <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+              </Link>
+              <Link href="/dashboard" className="px-12 py-6 border-4 border-swiss-black font-black uppercase tracking-widest text-xl hover:bg-swiss-black hover:text-swiss-white transition-colors duration-150 bg-swiss-white shadow-[4px_4px_0px_#050505]">
+                {t('btnDashboard')}
+              </Link>
+            </div>
+          </div>
+          <div className="flex-1 hidden md:block"></div>
+        </div>
+      </section>
+
+      {/* Architecture Section */}
+      <section className="bg-swiss-black text-swiss-white py-24 px-6">
+        <div className="max-w-[1440px] mx-auto">
+          <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter text-center mb-24">
+            {t('worksTitle')}
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="border-4 border-swiss-white/20 p-8 hover:border-swiss-accent transition-colors bg-swiss-white/5">
+              <Volume2 className="w-16 h-16 mb-8 text-swiss-accent" />
+              <h3 className="text-2xl font-black uppercase tracking-widest mb-4">1. Dictate or Type</h3>
+              <p className="text-swiss-white/70 font-medium">Citizens report issues via text or voice. Multilingual support powered by AI ensures no one is silenced by language barriers.</p>
+            </div>
+            
+            <div className="border-4 border-swiss-white/20 p-8 hover:border-swiss-accent transition-colors bg-swiss-white/5">
+              <Database className="w-16 h-16 mb-8 text-swiss-accent" />
+              <h3 className="text-2xl font-black uppercase tracking-widest mb-4">2. Hash & Store</h3>
+              <p className="text-swiss-white/70 font-medium">The complaint text is instantly converted to a SHA-256 hash. The raw data goes to a write-only database. No deletions.</p>
+            </div>
+
+            <div className="border-4 border-swiss-white/20 p-8 hover:border-swiss-accent transition-colors bg-swiss-white/5">
+              <Shield className="w-16 h-16 mb-8 text-swiss-accent" />
+              <h3 className="text-2xl font-black uppercase tracking-widest mb-4">3. Ledger Anchor</h3>
+              <p className="text-swiss-white/70 font-medium">The hash is sent to a custom Sepolia Smart Contract. It acts as an eternal digital notary verifying the exact text submitted at that time.</p>
+            </div>
+
+            <div className="border-4 border-swiss-white/20 p-8 hover:border-swiss-accent transition-colors bg-swiss-white/5">
+              <TrendingUp className="w-16 h-16 mb-8 text-swiss-accent" />
+              <h3 className="text-2xl font-black uppercase tracking-widest mb-4">4. AI Sorting</h3>
+              <p className="text-swiss-white/70 font-medium">An integrated Open-Source Z-AI Engine instantly reads the complaint, detects the severity, predicts duplicates, and routes it to the proper department.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Verify Section */}
+      <section className="py-24 px-6 bg-swiss-muted swiss-diagonal border-t-8 border-swiss-black">
+        <div className="max-w-[1440px] mx-auto text-center">
+          <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter mb-8 bg-swiss-black text-swiss-white inline-block px-8 py-4 -rotate-1 border-4 border-swiss-black">
+            {t('verifyTitle')}
+          </h2>
+          <p className="text-2xl font-medium max-w-3xl mx-auto mb-12 uppercase tracking-widest">
+            {t('verifyDesc')}
+          </p>
+          <Link href="/verify" className="btn-swiss-primary text-2xl px-16 py-8 inline-flex">
+            {t('btnVerify')}
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+
