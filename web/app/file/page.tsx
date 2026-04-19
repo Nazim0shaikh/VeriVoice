@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -158,8 +158,8 @@ export default function Home() {
               disabled={!!status}
             />
 
-            <div className="flex flex-wrap gap-4 pt-6 border-t-4 border-swiss-black items-center">
-              <div className="flex bg-swiss-muted border-2 border-swiss-black">
+            <div className="flex flex-wrap gap-4 pt-6 border-t-4 border-swiss-black items-start md:items-center">
+              <div className="flex flex-col sm:flex-row bg-swiss-muted border-2 border-swiss-black w-full md:w-auto">
                 <select 
                   value={voiceLang}
                   onChange={(e) => {
@@ -174,16 +174,16 @@ export default function Home() {
                     }
                   }}
                   disabled={!!status}
-                  className="bg-transparent font-bold uppercase tracking-widest text-sm px-4 py-3 outline-none cursor-pointer border-r-2 border-swiss-black"
+                  className="bg-transparent font-bold uppercase tracking-widest text-sm px-4 py-3 outline-none cursor-pointer border-b-2 sm:border-b-0 sm:border-r-2 border-swiss-black w-full sm:w-auto"
                 >
                   <option value="en-IN">English (IN)</option>
-                  <option value="hi-IN">Hindi (हिन्दी)</option>
-                  <option value="mr-IN">Marathi (मराठी)</option>
-                  <option value="bn-IN">Bengali (বাংলা)</option>
-                  <option value="ta-IN">Tamil (தமிழ்)</option>
-                  <option value="te-IN">Telugu (తెలుగు)</option>
-                  <option value="gu-IN">Gujarati (ગુજરાતી)</option>
-                  <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
+                  <option value="hi-IN">Hindi (à¤¹à¤¿à¤¨à¥à¤¦à¥€)</option>
+                  <option value="mr-IN">Marathi (à¤®à¤°à¤¾à¤ à¥€)</option>
+                  <option value="bn-IN">Bengali (à¦¬à¦¾à¦‚à¦²à¦¾)</option>
+                  <option value="ta-IN">Tamil (à®¤à®®à®¿à®´à¯)</option>
+                  <option value="te-IN">Telugu (à°¤à±†à°²à±à°—à±)</option>
+                  <option value="gu-IN">Gujarati (àª—à«àªœàª°àª¾àª¤à«€)</option>
+                  <option value="kn-IN">Kannada (à²•à²¨à³à²¨à²¡)</option>
                 </select>
 
                 <button 
@@ -255,3 +255,5 @@ export default function Home() {
     </div>
   );
 }
+
+
