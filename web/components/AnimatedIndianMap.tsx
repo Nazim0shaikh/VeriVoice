@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { ShieldAlert, CheckCircle2 } from 'lucide-react';
 
-export default function AnimatedIndianMap() {
+export default function AnimatedIndianMap({ onLoaded }: { onLoaded?: () => void }) {
   const [mounted, setMounted] = useState(false);
   const [geoData, setGeoData] = useState<any>(null);
   const [activeStateIndex, setActiveStateIndex] = useState<number | null>(null);
@@ -19,9 +19,16 @@ export default function AnimatedIndianMap() {
       .then(data => {
         setGeoData(data);
         setMounted(true);
+        if (onLoaded) {
+          // Add a tiny delay to ensure Leaflet has initialized the DOM
+          setTimeout(() => onLoaded(), 500); 
+        }
       })
-      .catch(err => console.error("Error loading GeoJSON", err));
-  }, []);
+      .catch(err => {
+        console.error("Error loading GeoJSON", err);
+        if (onLoaded) onLoaded(); // Fallback so we don't get stuck
+      });
+  }, [onLoaded]);
 
   useEffect(() => {
     if (!mounted || !geoData) return;

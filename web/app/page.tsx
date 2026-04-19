@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Shield, Volume2, Database, TrendingUp, ArrowRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
@@ -9,15 +10,54 @@ const AnimatedIndianMap = dynamic(() => import('@/components/AnimatedIndianMap')
 
 export default function LandingPage() {
   const { t } = useLanguage();
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress((p) => {
+        if (p >= 90) return p;
+        return p + Math.floor(Math.random() * 15) + 5;
+      });
+    }, 150);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (mapLoaded) {
+      setProgress(100);
+    }
+  }, [mapLoaded]);
 
   return (
-    <div className="flex flex-col">
-      {/* Hero Section */}
-      <section className="bg-swiss-white border-b-8 border-swiss-black min-h-[90vh] flex items-center relative overflow-hidden">
-        {/* Animated Background Map */}
-        <AnimatedIndianMap />
-        
-        {/* Background Dot Pattern (Overlay above Map) */}
+    <>
+      {/* Full Page Loader */}
+      <div 
+        className={`fixed inset-0 z-50 bg-swiss-white flex flex-col items-center justify-center transition-opacity duration-700 ease-in-out ${
+          progress === 100 ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
+      >
+        <h2 className="text-4xl md:text-6xl font-black uppercase tracking-widest text-swiss-black mb-8 animate-pulse">
+          Initializing Nodes...
+        </h2>
+        <div className="w-64 md:w-96 h-6 border-4 border-swiss-black p-1 bg-swiss-muted overflow-hidden relative">
+           <div 
+             className="h-full bg-swiss-accent transition-all duration-300 ease-out" 
+             style={{ width: `${progress}%` }}
+           ></div>
+        </div>
+        <p className="mt-4 font-bold uppercase tracking-widest text-swiss-black/50 text-sm">
+          {progress}% LOADED
+        </p>
+      </div>
+
+      <div className={`flex flex-col transition-opacity duration-700 delay-300 ease-in ${progress === 100 ? 'opacity-100' : 'opacity-0 h-screen overflow-hidden'}`}>
+        {/* Hero Section */}
+        <section className="bg-swiss-white border-b-8 border-swiss-black min-h-[90vh] flex items-center relative overflow-hidden">
+          {/* Animated Background Map */}
+          <AnimatedIndianMap onLoaded={() => setMapLoaded(true)} />
+          
+          {/* Background Dot Pattern (Overlay above Map) */}
         <div className="absolute inset-0 opacity-20 pointer-events-none z-0" style={{ backgroundImage: "radial-gradient(#000 2px, transparent 2px)", backgroundSize: "32px 32px" }}></div>
         
         {/* Foreground Content */}
@@ -154,6 +194,7 @@ export default function LandingPage() {
         </div>
       </section>
     </div>
+    </>
   );
 }
 

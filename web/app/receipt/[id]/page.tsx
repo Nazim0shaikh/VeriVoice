@@ -4,9 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { notFound } from 'next/navigation';
 import { getEtherscanLink } from '@/lib/blockchain';
 import { QRCodeSVG } from 'qrcode.react';
-import { Copy, Download, Share2, Check } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+import { Copy, Download, Share2, Check, Printer } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -58,24 +56,10 @@ export default function ReceiptPage({ params }: { params: { id: string } }) {
     }
   };
 
-  const handleDownloadPdf = async () => {
-    if (!receiptRef.current) return;
-    
-    // Create a temporary hidden div that only renders the core receipt parts without the UI buttons
-    const canvas = await html2canvas(receiptRef.current, {
-      scale: 2,
-      backgroundColor: '#f5f5dc', // match swiss-muted
-    });
-    
-    const imgData = canvas.toDataURL('image/jpeg', 1.0);
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    
-    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`VeriVoice_Receipt_${params.id}.pdf`);
+  const handleDownloadPdf = () => {
+    // Uses the browser's native print engine to allow "Save as PDF".
+    // This perfectly preserves text selection, links, layout, and font vectors.
+    window.print();
   };
 
   if (loading) {
@@ -87,37 +71,37 @@ export default function ReceiptPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="flex flex-col max-w-[1440px] mx-auto px-6 md:px-8 py-12 lg:py-24">
-      <div className="mb-12 border-b-4 border-swiss-black pb-8">
-        <h1 className="text-6xl md:text-8xl font-black uppercase text-green-600 mb-4 tracking-tighter">
+    <div className="flex flex-col max-w-[1440px] mx-auto px-6 md:px-8 py-12 lg:py-24 print:py-0 print:bg-white text-swiss-black">
+      <div className="mb-12 border-b-4 border-swiss-black pb-8 print:mb-6 print:pb-4">
+        <h1 className="text-6xl md:text-8xl font-black uppercase text-green-600 mb-4 tracking-tighter print:text-black">
           Secured.
         </h1>
         <p className="text-2xl font-bold tracking-widest uppercase">
-          Case <span className="text-swiss-accent">{params.id}</span>
+          Case <span className="text-swiss-accent print:text-black">{params.id}</span>
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
-        <div className="lg:col-span-8 flex flex-col gap-8" ref={receiptRef}>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 print:block">
+        <div className="lg:col-span-8 flex flex-col gap-8 print:gap-4" ref={receiptRef}>
           
-          <div className="border-4 border-swiss-black p-8 md:p-12 relative overflow-hidden bg-swiss-muted swiss-grid-pattern">
-            <div className="absolute -top-4 -right-4 w-48 h-48 bg-swiss-black rounded-full opacity-5 pointer-events-none"></div>
+          <div className="border-4 border-swiss-black p-8 md:p-12 relative overflow-hidden bg-swiss-muted swiss-grid-pattern print:bg-white print:p-6 text-black print:color-exact" style={{ WebkitPrintColorAdjust: 'exact' }}>
+            <div className="absolute -top-4 -right-4 w-48 h-48 bg-swiss-black rounded-full opacity-5 pointer-events-none print:hidden"></div>
             
-            <h2 className="text-3xl font-black uppercase mb-8 border-b-4 border-swiss-black pb-4 inline-block">
+            <h2 className="text-3xl font-black uppercase mb-8 border-b-4 border-swiss-black pb-4 inline-block print:mb-4">
               Cryptographic Proof
             </h2>
             
-            <div className="bg-swiss-white border-2 border-swiss-black p-6 mb-8 overflow-x-auto">
+            <div className="bg-swiss-white border-2 border-swiss-black p-6 mb-8 overflow-x-auto print:mb-4 print:p-4">
               <label className="text-xs font-bold uppercase tracking-widest text-swiss-black/50 block mb-2">SHA-256 HASH</label>
-              <code className="text-sm md:text-base font-mono text-swiss-accent break-all">{data?.hash}</code>
+              <code className="text-sm md:text-base font-mono text-swiss-accent print:text-black break-all select-all">{data?.hash}</code>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-swiss-white border-2 border-swiss-black p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-swiss-white border-2 border-swiss-black p-6 print:gap-4 print:p-4">
                <div>
                   <label className="text-xs font-bold uppercase tracking-widest text-swiss-black/50 block mb-2">BLOCKCHAIN TRANSACTION</label>
                   {data?.blockchainTx ? (
-                    <a href={getEtherscanLink(data.blockchainTx)} target="_blank" rel="noreferrer" className="text-sm font-bold truncate text-blue-600 hover:text-swiss-accent underline transition-colors">
-                      {data.blockchainTx.substring(0, 16)}...{data.blockchainTx.substring(50)}
+                    <a href={getEtherscanLink(data.blockchainTx)} target="_blank" rel="noreferrer" className="text-sm font-bold truncate block text-blue-600 hover:text-swiss-accent underline select-all print:text-black">
+                      {data.blockchainTx}
                     </a>
                   ) : (
                     <span className="text-sm font-bold text-amber-600">Pending Block Confirmation...</span>
@@ -130,30 +114,30 @@ export default function ReceiptPage({ params }: { params: { id: string } }) {
             </div>
           </div>
 
-          <div className="border-4 border-swiss-black p-8 md:p-12">
+          <div className="border-4 border-swiss-black p-8 md:p-12 print:p-6 print:mt-8">
              <div className="flex items-center justify-between mb-6 pb-4 border-b-4 border-swiss-black">
                <h3 className="text-2xl font-black uppercase tracking-tighter">AI Analysis</h3>
-               <span className={`px-4 py-2 font-bold uppercase tracking-widest text-xs border-2 border-swiss-black ${data?.severity === 5 ? 'bg-red-600 text-white' : 'bg-swiss-muted'}`}>
+               <span className={`px-4 py-2 font-bold uppercase tracking-widest text-xs border-2 border-swiss-black select-none print:text-black print:border-black ${data?.severity === 5 ? 'bg-red-600 text-white' : 'bg-swiss-muted'}`} style={{ WebkitPrintColorAdjust: 'exact' }}>
                  Level {data?.severity}
                </span>
              </div>
              
-             <div className="text-xl font-medium border-l-4 border-swiss-accent pl-6 mb-8 text-swiss-black/80">
+             <div className="text-xl font-medium border-l-4 border-swiss-accent pl-6 mb-8 text-swiss-black/80 print:border-black">
                {data?.summary}
              </div>
 
              <div className="flex gap-4">
-                <span className="bg-swiss-black text-swiss-white font-bold uppercase text-xs tracking-widest px-4 py-2">
+                <span className="bg-swiss-black text-swiss-white font-bold uppercase text-xs tracking-widest px-4 py-2 print:text-black print:bg-white print:border-2 print:border-black">
                   {data?.category}
                 </span>
-                <span className="bg-swiss-muted border-2 border-swiss-black text-swiss-black font-bold uppercase text-xs tracking-widest px-4 py-2">
+                <span className="bg-swiss-muted border-2 border-swiss-black text-swiss-black font-bold uppercase text-xs tracking-widest px-4 py-2 print:bg-white">
                   {data?.department}
                 </span>
              </div>
           </div>
         </div>
 
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-4 print:hidden">
           <div className="border-4 border-swiss-black p-8 bg-swiss-white sticky top-32 flex flex-col items-center text-center">
              <h3 className="text-xl font-black uppercase tracking-widest mb-8 border-b-4 border-swiss-black w-full pb-4">Verification Tag</h3>
              
