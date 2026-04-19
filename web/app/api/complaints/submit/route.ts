@@ -30,7 +30,25 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { text, voiceTranscript, location, submitterToken } = body;
+    const { text, voiceTranscript, location, submitterToken, cfTurnstileResponse } = body;
+
+    // 1. Verify Cloudflare Turnstile Token
+    if (!cfTurnstileResponse) {
+      return NextResponse.json({ error: 'Security check missing. Please complete the CAPTCHA.' }, { status: 400 });
+    }
+
+    const secretKey = process.env.TURNSTILE_SECRET_KEY || '0x4AAAAAAC_tMlwq0X0ZinS9pIHbNjlPsMc';
+    const turnstileVerifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `secret=${secretKey}&response=${cfTurnstileResponse}`
+    });
+    
+    const turnstileVerifyData = await turnstileVerifyRes.json();
+    if (!turnstileVerifyData.success) {
+      console.warn('Turnstile Failed:', turnstileVerifyData);
+      return NextResponse.json({ error: 'Security check failed. Bots are not allowed.' }, { status: 403 });
+    }
 
     const actualText = text || voiceTranscript;
 

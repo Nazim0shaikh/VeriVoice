@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Mic, MicOff, MapPin, Send, ShieldAlert, Loader2 } from 'lucide-react';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { useLanguage } from '@/components/LanguageContext';
 
 export default function Home() {
@@ -12,7 +13,8 @@ export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const [voiceLang, setVoiceLang] = useState('en-IN');
   const [location, setLocation] = useState<{lat: number, lng: number, address?: string} | null>(null);
-  const [status, setStatus] = useState<null | 'Hashing...' | 'Storing...' | 'Anchoring...' | 'Done'>(null);
+  const [status, setStatus] = useState<null | 'Verifying...' | 'Hashing...' | 'Storing...' | 'Anchoring...' | 'Done'>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -80,21 +82,24 @@ export default function Home() {
       return;
     }
     
+    if (!turnstileToken) {
+      alert("Please complete the security check.");
+      return;
+    }
+    
     try {
-      setStatus('Hashing...');
+      setStatus('Verifying...');
       
-      setStatus('Storing...');
-      // Simulated delay for UI feedback
-      await new Promise(r => setTimeout(r, 800));
-
-      setStatus('Anchoring...');
       const res = await fetch('/api/complaints/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, location })
+        body: JSON.stringify({ text, location, cfTurnstileResponse: turnstileToken })
       });
 
-      if (!res.ok) throw new Error("Submission failed");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Submission failed");
+      }
       
       const data = await res.json();
       setStatus('Done');
@@ -102,9 +107,9 @@ export default function Home() {
       // Redirect to receipt
       router.push(`/receipt/${data.complaintId}`);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Failed to submit complaint. Please try again.");
+      alert(error.message || "Failed to submit complaint. Please try again.");
       setStatus(null);
     }
   };
@@ -222,15 +227,24 @@ export default function Home() {
 
               <div className="mb-8">
                 <label className="block text-sm font-bold tracking-widest uppercase mb-4">{t('fileCategoryAuto')}</label>
-                <div className="p-4 border-2 border-swiss-black/20 bg-swiss-white/50 text-swiss-black/50 text-sm font-semibold">
+                <div className="p-4 border-2 border-swiss-black/20 bg-swiss-white/50 text-swiss-black/50 text-sm font-semibold mb-4">
                   {t('fileClaudeAI')}
+                </div>
+                
+                {/* Cloudflare Turnstile */}
+                <div className="flex justify-center border-4 border-swiss-black bg-white p-2">
+                  <Turnstile 
+                    siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAAC_tMvtucWu0XjBH'} 
+                    onSuccess={(token) => setTurnstileToken(token)}
+                    options={{ theme: 'light' }}
+                  />
                 </div>
               </div>
             </div>
 
             <button 
               type="submit" 
-              disabled={text.length < 20 || !!status}
+              disabled={text.length < 20 || !turnstileToken || !!status}
               className="btn-swiss-primary w-full flex items-center justify-center gap-4 text-lg py-6 disabled:opacity-50 disabled:cursor-not-allowed group"
             >
               {status ? (
