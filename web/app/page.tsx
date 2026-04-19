@@ -76,19 +76,19 @@ export default function LandingPage() {
         {/* Foreground Content */}
         <div className="max-w-[1440px] w-full px-6 mx-auto relative z-10 flex flex-col md:flex-row gap-12 items-center pointer-events-none">
           <div className="flex-1 max-w-3xl pointer-events-auto">
-            <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter leading-none mb-8 text-swiss-black">
-              {t('heroVoice')} <br />
-              <span className="text-swiss-accent shadow-[8px_8px_0px_#050505] bg-swiss-black px-4 inline-block transform -rotate-2">{t('heroImmutable')}</span>
+            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[8rem] font-black uppercase tracking-tighter leading-[0.9] mb-8 text-swiss-black mt-8 md:mt-0">
+              <span className="block mb-2">{t('heroVoice')}</span>
+              <span className="text-swiss-accent shadow-[4px_4px_0px_#050505] md:shadow-[8px_8px_0px_#050505] bg-swiss-black px-2 sm:px-4 py-1 sm:py-2 inline-block transform -rotate-2 leading-none whitespace-normal break-words break-all sm:break-normal max-w-full">{t('heroImmutable')}</span>
             </h1>
-            <p className="text-2xl md:text-3xl font-medium tracking-tight mb-12 border-l-8 border-swiss-black pl-6 text-swiss-black">
+            <p className="text-xl md:text-2xl lg:text-3xl font-medium tracking-tight mb-12 border-l-4 md:border-l-8 border-swiss-black pl-4 md:pl-6 text-swiss-black">
               {t('heroDesc')}
             </p>
-            <div className="flex flex-wrap gap-6">
-              <Link href="/file" className="btn-swiss-primary text-xl px-12 py-6 flex items-center justify-center gap-4 group">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4 md:gap-6">
+              <Link href="/file" className="btn-swiss-primary text-lg md:text-xl px-8 py-5 md:px-12 md:py-6 flex items-center justify-center gap-4 group w-full sm:w-auto">
                 {t('btnFile')} 
                 <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
               </Link>
-              <Link href="/dashboard" className="px-12 py-6 border-4 border-swiss-black font-black uppercase tracking-widest text-xl hover:bg-swiss-black hover:text-swiss-white transition-colors duration-150 bg-swiss-white shadow-[4px_4px_0px_#050505]">
+              <Link href="/dashboard" className="px-8 py-5 md:px-12 md:py-6 border-4 border-swiss-black font-black uppercase tracking-widest text-lg md:text-xl hover:bg-swiss-black hover:text-swiss-white transition-colors duration-150 bg-swiss-white shadow-[4px_4px_0px_#050505] w-full sm:w-auto text-center">
                 {t('btnDashboard')}
               </Link>
             </div>
@@ -210,6 +210,7 @@ export default function LandingPage() {
     </>
   );
 }
+
 
 
 
