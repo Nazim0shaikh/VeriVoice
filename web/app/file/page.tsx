@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Mic, MicOff, MapPin, Send, ShieldAlert, Loader2 } from 'lucide-react';
-import { Turnstile } from '@marsidev/react-turnstile';
 import { useLanguage } from '@/components/LanguageContext';
 
 export default function Home() {
@@ -14,7 +13,6 @@ export default function Home() {
   const [voiceLang, setVoiceLang] = useState('en-IN');
   const [location, setLocation] = useState<{lat: number, lng: number, address?: string} | null>(null);
   const [status, setStatus] = useState<null | 'Verifying...' | 'Hashing...' | 'Storing...' | 'Anchoring...' | 'Done'>(null);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -82,18 +80,13 @@ export default function Home() {
       return;
     }
     
-    if (!turnstileToken) {
-      alert("Please complete the security check.");
-      return;
-    }
-    
     try {
       setStatus('Verifying...');
       
       const res = await fetch('/api/complaints/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, location, cfTurnstileResponse: turnstileToken })
+        body: JSON.stringify({ text, location })
       });
 
       if (!res.ok) {
@@ -230,21 +223,12 @@ export default function Home() {
                 <div className="p-4 border-2 border-swiss-black/20 bg-swiss-white/50 text-swiss-black/50 text-sm font-semibold mb-4">
                   {t('fileClaudeAI')}
                 </div>
-                
-                {/* Cloudflare Turnstile */}
-                <div className="flex justify-center border-4 border-swiss-black bg-white p-2">
-                  <Turnstile 
-                    siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAAC_tMvtucWu0XjBH'} 
-                    onSuccess={(token) => setTurnstileToken(token)}
-                    options={{ theme: 'light' }}
-                  />
-                </div>
               </div>
             </div>
 
             <button 
               type="submit" 
-              disabled={text.length < 20 || !turnstileToken || !!status}
+              disabled={text.length < 20 || !!status}
               className="btn-swiss-primary w-full flex items-center justify-center gap-4 text-lg py-6 disabled:opacity-50 disabled:cursor-not-allowed group"
             >
               {status ? (
@@ -255,6 +239,8 @@ export default function Home() {
                     <span className="text-xs uppercase tracking-tight opacity-75 animate-pulse mt-1">Please wait... up to 30-45 seconds to anchor to blockchain</span>
                   </span>
                 </>
+              ) : text.length < 20 ? (
+                <span>Enter at least 20 characters</span>
               ) : (
                 <>
                   <span>{t('fileSubmit')}</span>
