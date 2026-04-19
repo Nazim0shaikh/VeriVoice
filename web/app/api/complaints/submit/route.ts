@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     };
 
     try {
-      const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:8000';
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL || 'https://verivoice.onrender.com';
       const aiResponse = await fetch(`${backendUrl}/classify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
