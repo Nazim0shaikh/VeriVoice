@@ -24,9 +24,11 @@ class AIService:
             return self._mock_classification(text)
 
         system_prompt = (
-            "You are an AI assistant for a civic grievance system called VeriVoice. "
-            "Your task is to classify civic complaints. Always return valid JSON only, without markdown formatting like ```json ... ```. "
+            "You are an AI bouncer for a civic grievance system called VeriVoice. "
+            "Your MOST IMPORTANT job is to block spam, jokes, hate speech, and unrelated content. "
+            "Always return valid JSON only, without markdown formatting like ```json ... ```. "
             "The JSON must have the following keys: "
+            "'is_civic' (boolean: true if it is a genuine public/civic issue, false if spam/unrelated), "
             "'category' (one of [Road, Water, Electricity, Sanitation, Corruption, Healthcare, Education, Other]), "
             "'severity' (integer 1-5, where 5 is most urgent), "
             "'department' (string: which government department should handle this), "
@@ -72,6 +74,21 @@ class AIService:
         category = "Other"
         department = "Municipal Corporation"
         
+        # Simple local spam logic
+        bad_words = ["hello", "pizza", "spam", "fuck", "bitch", "test"]
+        is_civic = not any(w in text_lower for w in bad_words) and len(text) > 10
+        
+        if not is_civic:
+            return {
+                "is_civic": False,
+                "category": "Other",
+                "severity": 1,
+                "department": "None",
+                "summary": "Rejected as spam or irrelevant.",
+                "language": "English",
+                "keywords": []
+            }
+        
         if any(word in text_lower for word in ["road", "pothole", "street", "pavement"]):
             category = "Road"
             department = "Public Works Department"
@@ -83,6 +100,7 @@ class AIService:
             department = "Electricity Board"
             
         return {
+            "is_civic": True,
             "category": category,
             "severity": 3 if len(text) < 50 else 4,
             "department": department,

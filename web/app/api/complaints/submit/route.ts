@@ -3,8 +3,32 @@ import { generateComplaintId, sha256 } from '@/lib/hash';
 import { anchorToBlockchain, getEtherscanLink } from '@/lib/blockchain';
 import { adminDb, admin } from '@/lib/firebaseAdmin';
 
+// Light Serverless Rate Limiter (Protects against simple script spam)
+const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
+const WINDOW_MS = 60 * 1000 * 60; // 1 hour
+const MAX_REQUESTS = 5;
+
 export async function POST(req: Request) {
   try {
+    // 0. Execution of Rate Limiter
+    const ip = req.headers.get('x-forwarded-for') || 'default-ip';
+    const now = Date.now();
+    let rateData = rateLimitMap.get(ip);
+    
+    if (!rateData || now - rateData.lastReset > WINDOW_MS) {
+      rateData = { count: 0, lastReset: now };
+    }
+    
+    rateData.count++;
+    rateLimitMap.set(ip, rateData);
+
+    if (rateData.count > MAX_REQUESTS) {
+      return NextResponse.json(
+        { error: 'You have reached the maximum submission limit. Please wait an hour to submit again.' },
+        { status: 429, headers: { 'Retry-After': String(60 * 60) } }
+      );
+    }
+
     const body = await req.json();
     const { text, voiceTranscript, location, submitterToken } = body;
 
@@ -30,6 +54,7 @@ export async function POST(req: Request) {
     // 3. Call AI Classification (FastAPI Backend)
     // We use a try/catch here so the complaint isn't completely lost if the AI backend is down.
     let classification = {
+      is_civic: true, // Optimistically allow if network error
       category: 'Other',
       severity: 1,
       department: 'Unassigned',
@@ -52,6 +77,14 @@ export async function POST(req: Request) {
       }
     } catch (aiError) {
       console.warn('AI Classification service unreachable:', aiError);
+    }
+
+    // 3.5 Semantic AI Bouncer - Save Ledger Gas!
+    if (classification.hasOwnProperty('is_civic') && classification.is_civic === false) {
+      return NextResponse.json(
+        { error: 'AI Verification Failed: Please submit a genuine civic issue. Spam and unrelated messages are forbidden on the immutable ledger.' },
+        { status: 406 } // 406 Not Acceptable
+      );
     }
 
     // 4. Store in Firestore securely via Admin SDK 
