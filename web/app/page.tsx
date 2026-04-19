@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -66,7 +66,9 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="bg-swiss-white border-b-8 border-swiss-black min-h-[90vh] flex items-center relative overflow-hidden">
           {/* Animated Background Map */}
-          <AnimatedIndianMap onLoaded={() => setMapLoaded(true)} />
+          <div className="hidden lg:block absolute inset-0 z-0">
+            <AnimatedIndianMap onLoaded={() => setMapLoaded(true)} />
+          </div>
           
           {/* Background Dot Pattern (Overlay above Map) */}
         <div className="absolute inset-0 opacity-20 pointer-events-none z-0" style={{ backgroundImage: "radial-gradient(#000 2px, transparent 2px)", backgroundSize: "32px 32px" }}></div>
@@ -208,5 +210,7 @@ export default function LandingPage() {
     </>
   );
 }
+
+
 
 
