@@ -12,8 +12,16 @@ export default function LandingPage() {
   const { t } = useLanguage();
   const [mapLoaded, setMapLoaded] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [showLoader, setShowLoader] = useState(true);
 
   useEffect(() => {
+    if (sessionStorage.getItem('verivoice_map_loaded')) {
+      setShowLoader(false);
+      setProgress(100);
+      setMapLoaded(true);
+      return;
+    }
+
     const interval = setInterval(() => {
       setProgress((p) => {
         if (p >= 90) return p;
@@ -24,34 +32,37 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
-    if (mapLoaded) {
+    if (mapLoaded && showLoader) {
       setProgress(100);
+      sessionStorage.setItem('verivoice_map_loaded', 'true');
     }
-  }, [mapLoaded]);
+  }, [mapLoaded, showLoader]);
 
   return (
     <>
       {/* Full Page Loader */}
-      <div 
-        className={`fixed inset-0 z-50 bg-swiss-white flex flex-col items-center justify-center transition-opacity duration-700 ease-in-out ${
-          progress === 100 ? 'opacity-0 pointer-events-none' : 'opacity-100'
-        }`}
-      >
-        <h2 className="text-4xl md:text-6xl font-black uppercase tracking-widest text-swiss-black mb-8 animate-pulse">
-          Initializing Nodes...
-        </h2>
-        <div className="w-64 md:w-96 h-6 border-4 border-swiss-black p-1 bg-swiss-muted overflow-hidden relative">
-           <div 
-             className="h-full bg-swiss-accent transition-all duration-300 ease-out" 
-             style={{ width: `${progress}%` }}
-           ></div>
+      {showLoader && (
+        <div 
+          className={`fixed inset-0 z-50 bg-swiss-white flex flex-col items-center justify-center transition-opacity duration-700 ease-in-out ${
+            progress === 100 ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
+        >
+          <h2 className="text-4xl md:text-6xl font-black uppercase tracking-widest text-swiss-black mb-8 animate-pulse">
+            Initializing Nodes...
+          </h2>
+          <div className="w-64 md:w-96 h-6 border-4 border-swiss-black p-1 bg-swiss-muted overflow-hidden relative">
+             <div 
+               className="h-full bg-swiss-accent transition-all duration-300 ease-out" 
+               style={{ width: `${progress}%` }}
+             ></div>
+          </div>
+          <p className="mt-4 font-bold uppercase tracking-widest text-swiss-black/50 text-sm">
+            {progress}% LOADED
+          </p>
         </div>
-        <p className="mt-4 font-bold uppercase tracking-widest text-swiss-black/50 text-sm">
-          {progress}% LOADED
-        </p>
-      </div>
+      )}
 
-      <div className={`flex flex-col transition-opacity duration-700 delay-300 ease-in ${progress === 100 ? 'opacity-100' : 'opacity-0 h-screen overflow-hidden'}`}>
+      <div className={`flex flex-col transition-opacity duration-700 ease-in ${!showLoader || progress === 100 ? 'opacity-100' : 'opacity-0 h-screen overflow-hidden'}`}>
         {/* Hero Section */}
         <section className="bg-swiss-white border-b-8 border-swiss-black min-h-[90vh] flex items-center relative overflow-hidden">
           {/* Animated Background Map */}

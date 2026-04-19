@@ -14,6 +14,7 @@ export default function Header() {
         </Link>
         <div className="flex items-center gap-6">
           <nav className="hidden md:flex gap-6 group">
+            <Link href="/" className="font-bold tracking-widest text-sm uppercase relative overflow-hidden group-hover:text-swiss-muted hover:!text-swiss-accent transition-colors duration-150">Home</Link>
             <Link href="/file" className="font-bold tracking-widest text-sm uppercase relative overflow-hidden group-hover:text-swiss-muted hover:!text-swiss-accent transition-colors duration-150">{t('navFile')}</Link>
             <Link href="/verify" className="font-bold tracking-widest text-sm uppercase relative overflow-hidden group-hover:text-swiss-muted hover:!text-swiss-accent transition-colors duration-150">{t('navVerify')}</Link>
             <Link href="/dashboard" className="font-bold tracking-widest text-sm uppercase relative overflow-hidden group-hover:text-swiss-muted hover:!text-swiss-accent transition-colors duration-150">{t('navDashboard')}</Link>
