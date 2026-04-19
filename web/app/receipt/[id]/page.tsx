@@ -1,26 +1,90 @@
-import { Metadata } from 'next';
+'use client';
+
+import { useEffect, useState, useRef } from 'react';
 import { notFound } from 'next/navigation';
-import { adminDb } from '@/lib/firebaseAdmin';
 import { getEtherscanLink } from '@/lib/blockchain';
 import { QRCodeSVG } from 'qrcode.react';
+import { Copy, Download, Share2, Check } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import { db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
-// Assuming you're fetching the complaint directly via server component
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  return {
-    title: `Receipt ${params.id} | VeriVoice`,
+export default function ReceiptPage({ params }: { params: { id: string } }) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const receiptRef = useRef<HTMLDivElement>(null);
+
+  // In a real app we'd fetch securely on the server via Server Component and prop-drill it, 
+  // but to immediately enable interactive downloading, we will just fetch it directly from the client.
+  useEffect(() => {
+    const fetchDoc = async () => {
+      try {
+        const docRef = doc(db, 'COMPLAINTS', params.id);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          setData(docSnap.data());
+        } else {
+          setData(null);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDoc();
+  }, [params.id]);
+
+  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://verivoice.vercel.app'}/verify?id=${params.id}`;
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'VeriVoice Receipt',
+          text: `Check out my cryptographically secured VeriVoice complaint receipt: ${params.id}`,
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch (err) {
+      console.log('Share failed or was cancelled');
+    }
   };
-}
 
-export default async function ReceiptPage({ params }: { params: { id: string } }) {
-  const doc = await adminDb.collection('COMPLAINTS').doc(params.id).get();
-  
-  if (!doc.exists) {
-    notFound();
+  const handleDownloadPdf = async () => {
+    if (!receiptRef.current) return;
+    
+    // Create a temporary hidden div that only renders the core receipt parts without the UI buttons
+    const canvas = await html2canvas(receiptRef.current, {
+      scale: 2,
+      backgroundColor: '#f5f5dc', // match swiss-muted
+    });
+    
+    const imgData = canvas.toDataURL('image/jpeg', 1.0);
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    
+    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save(`VeriVoice_Receipt_${params.id}.pdf`);
+  };
+
+  if (loading) {
+    return <div className="min-h-[60vh] flex items-center justify-center font-black uppercase text-2xl tracking-widest text-swiss-black animate-pulse">Loading Record...</div>;
   }
 
-  const data = doc.data();
-  // Using an environment variable or hardcoded origin for absolute URL in QR
-  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://verivoice.vercel.app'}/verify?id=${params.id}`;
+  if (!data) {
+    return <div className="min-h-[60vh] flex items-center justify-center font-black uppercase text-4xl text-red-600">404: Record Not Found.</div>;
+  }
 
   return (
     <div className="flex flex-col max-w-[1440px] mx-auto px-6 md:px-8 py-12 lg:py-24">
@@ -34,7 +98,7 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
-        <div className="lg:col-span-8 flex flex-col gap-8">
+        <div className="lg:col-span-8 flex flex-col gap-8" ref={receiptRef}>
           
           <div className="border-4 border-swiss-black p-8 md:p-12 relative overflow-hidden bg-swiss-muted swiss-grid-pattern">
             <div className="absolute -top-4 -right-4 w-48 h-48 bg-swiss-black rounded-full opacity-5 pointer-events-none"></div>
@@ -98,8 +162,14 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
              </div>
              
              <div className="flex flex-col gap-4 w-full">
-               <button className="btn-swiss-primary w-full text-sm">Download PDF Document</button>
-               <button className="btn-swiss w-full text-sm">Share Link</button>
+               <button onClick={handleDownloadPdf} className="btn-swiss-primary w-full text-sm flex items-center justify-center gap-3 py-4 group">
+                 <Download className="w-5 h-5 group-hover:translate-y-1 transition-transform" />
+                 Download PDF Document
+               </button>
+               <button onClick={handleShare} className="btn-swiss w-full text-sm flex items-center justify-center gap-3 py-4">
+                 {copied ? <Check className="w-5 h-5 text-green-600" /> : <Share2 className="w-5 h-5" />}
+                 {copied ? 'Link Copied!' : 'Share Link'}
+               </button>
              </div>
              
              <p className="text-xs uppercase font-bold tracking-widest text-swiss-black/50 mt-8">

@@ -250,7 +250,10 @@ export default function Home() {
               {status ? (
                 <>
                   <Loader2 className="w-6 h-6 animate-spin" />
-                  {status}
+                  <span className="flex flex-col items-center">
+                    <span className="font-black uppercase tracking-widest">{status}</span>
+                    <span className="text-xs uppercase tracking-tight opacity-75 animate-pulse mt-1">Please wait... up to 30-45 seconds to anchor to blockchain</span>
+                  </span>
                 </>
               ) : (
                 <>
